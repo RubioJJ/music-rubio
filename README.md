@@ -27,5 +27,13 @@ O segundo comando gera o banco LevelDB em `packs/musicas/`. Rode-o novamente sem
 3. Inicie o Foundry VTT 14 e ative **Everest Kitchen Music Pack (V14)** no mundo.
 4. Abra o compêndio do módulo e importe as playlists desejadas. Depois de atualizar o módulo, importe novamente as playlists que quiser atualizar no mundo.
 
+## Publicar no GitHub
+
+Crie branches a partir da `main` atualizada, usando o prefixo `feature/`. Envie a branch à `origin` e abra um pull request para `main`. O GitHub Actions valida o nome da branch e compila o módulo no pull request. Configure a proteção da `main` para exigir pull request e o check **Validar módulo e branch**.
+
+Cada atualização da `main` publica uma versão `1.0.N`, com manifesto e ZIP. No Foundry, use o endereço `https://github.com/USUARIO/REPOSITORIO/releases/latest/download/module.json` em **Install Module → Manifest URL**. O Foundry precisa acessar os arquivos da release sem login.
+
+A release contém as faixas versionadas no Git. Os arquivos de áudio adicionados apenas na cópia local ficam fora das releases. Para incluir arquivos que você pode distribuir, adicione-os explicitamente com `git add -f -- <arquivo>` na branch `feature/`. Configure o Git LFS antes de adicionar faixas grandes.
+
 - [Foundry CLI oficial](https://github.com/foundryvtt/foundryvtt-cli)
 - [Guia de empacotamento de módulos](https://foundryvtt.com/article/packaging-guide/)

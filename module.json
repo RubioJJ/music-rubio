@@ -1,0 +1,18 @@
+{
+  "id": "everest-kitchen-music-pack-v14",
+  "title": "Everest Kitchen Music Pack (V14)",
+  "description": "Compêndio de músicas e ambientes.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "14",
+    "maximum": "14"
+  },
+  "packs": [
+    {
+      "name": "musicas",
+      "label": "Everest Kitchen Music Pack (V14)",
+      "path": "packs/musicas",
+      "type": "Playlist"
+    }
+  ]
+}
