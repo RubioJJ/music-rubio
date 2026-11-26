@@ -1,0 +1,78 @@
+name: Publicar módulo Foundry
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    name: Validar módulo e branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exigir branch feature/
+        if: github.event_name == 'pull_request'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [[ "$HEAD_REF" != feature/?* ]]; then
+            echo 'Use uma branch com prefixo feature/.' >&2
+            exit 1
+          fi
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build:playlists -- --allow-empty
+      - name: Preparar arquivos para o Foundry
+        env:
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_NUMBER: ${{ github.run_number }}
+        run: |
+          module_id=$(node scripts/prepare-release.mjs)
+          (cd dist && zip -qr "$module_id.module.zip" "$module_id")
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          name: foundry-module
+          path: |
+            dist/module.json
+            dist/*.module.zip
+          if-no-files-found: error
+
+  publicar:
+    name: Publicar release
+    if: github.event_name == 'push'
+    needs: validar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: foundry-module
+          path: dist
+      - name: Publicar manifesto e ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_NUMBER: ${{ github.run_number }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          tag="v1.0.$RELEASE_NUMBER"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/module.json dist/*.module.zip --clobber
+          else
+            gh release create "$tag" dist/module.json dist/*.module.zip \
+              --target "$COMMIT_SHA" --title "$tag" --generate-notes
+          fi
